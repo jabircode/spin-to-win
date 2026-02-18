@@ -1,6 +1,6 @@
 # sleekflow-spin-to-win
 
-A mobile-first spin-to-win wheel web app built for SleekFlow campaigns. Verifies contacts via the SleekFlow API before allowing a spin, prevents duplicate entries, and is fully rebrandable through config files.
+A mobile-first spin-to-win wheel web app built for SleekFlow campaigns. Verifies contacts via the SleekFlow API before allowing a spin, prevents duplicate entries, fires a webhook on result, and is fully rebrandable through config files.
 
 ## Demo
 
@@ -19,7 +19,7 @@ spin-the-wheel/
 ├── index.html      # App shell (screens + markup)
 ├── style.css       # Layout & component styles (rarely needs editing)
 ├── config.css      # ← Brand colors, fonts, visual tokens
-├── config.js       # ← API settings, logo, copy, spin behavior
+├── config.js       # ← API settings, webhook, logo, copy, spin behavior
 ├── prizes.js       # ← Prize labels, probabilities, segment colors
 └── script.js       # Core wheel logic (no editing needed)
 ```
@@ -46,9 +46,9 @@ const PRIZES = [
 
 ```css
 :root {
-  --sf-primary: #4364E0;      /* main brand color */
-  --sf-bg: #F5F6FA;           /* page background */
-  --sf-text: #1A1A2E;         /* body text */
+  --sf-primary: #4364E0;       /* main brand color */
+  --sf-bg: #F5F6FA;            /* page background */
+  --sf-text: #1A1A2E;          /* body text */
   --sf-pointer-color: #1A1A2E; /* wheel pointer */
   /* ... */
 }
@@ -70,6 +70,39 @@ const CONFIG = {
 };
 ```
 
+### 4. Webhook — `config.js`
+
+A POST request is fired automatically after every spin. Configure it in the `webhook` block inside `config.js`:
+
+```js
+webhook: {
+  url: "https://hooks.zapier.com/hooks/catch/xxxxx/yyyyy/", // set to null to disable
+
+  payload: {
+    contactId:  "{{contactId}}",  // SleekFlow contact ID from URL param
+    prize:      "{{prize}}",      // winning prize label, e.g. "🎁 Gift Voucher $50"
+    prizeIndex: "{{prizeIndex}}", // zero-based index into PRIZES array
+    timestamp:  "{{timestamp}}", // UTC ISO 8601, e.g. "2025-01-31T08:45:00.000Z"
+    source:     "spin-to-win",   // static value — edit or remove as needed
+  },
+},
+```
+
+**Available tokens** (use inside any string value in `payload`):
+
+| Token | Value |
+|---|---|
+| `{{contactId}}` | Contact ID from the URL |
+| `{{prize}}` | Winning prize label |
+| `{{prizeIndex}}` | Index of the winning prize (0-based) |
+| `{{timestamp}}` | Spin time in UTC ISO 8601 format |
+
+**Notes:**
+- Set `url: null` to disable the webhook entirely
+- Set any payload field to `null` to omit it from the request body
+- Non-token string values (like `source: "spin-to-win"`) are passed through as-is
+- The webhook fires for `contactId=test` as well — useful for end-to-end testing
+
 ---
 
 ## Running Locally
@@ -81,7 +114,7 @@ python3 -m http.server 8080
 
 Then open: `http://localhost:8080/?contactId=test`
 
-> **Note:** The app must be served over HTTP (not opened as a `file://` URL) for the SleekFlow API call to work correctly.
+> **Note:** The app must be served over HTTP (not opened as a `file://` URL) for the SleekFlow API and webhook calls to work correctly.
 
 ---
 
@@ -103,7 +136,8 @@ If the `contactId` is missing or not found in SleekFlow, the user sees an error 
 3. If valid, the wheel is shown — otherwise an error screen is displayed
 4. On spin, a winner is picked using weighted random selection
 5. The result is shown with a confetti animation
-6. The `contactId` is recorded in `localStorage` — revisiting the URL shows an "Already Played" screen
+6. A POST webhook is fired with the prize result, contact ID, and timestamp
+7. The `contactId` is recorded in `localStorage` — revisiting the URL shows an "Already Played" screen
 
 ---
 
@@ -112,8 +146,7 @@ If the `contactId` is missing or not found in SleekFlow, the user sees an error 
 To adapt this for a different brand, edit only:
 
 - `config.css` — swap colors
-- `config.js` — swap logo SVG, API credentials, and copy
+- `config.js` — swap logo SVG, API credentials, webhook URL, and copy
 - `prizes.js` — update prizes
 
 No changes to `style.css` or `script.js` needed.
-# sleekflow-spin-to-win # skip this, README already exists

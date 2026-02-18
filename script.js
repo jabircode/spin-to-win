@@ -156,6 +156,7 @@
     try {
       await fetch(url, {
         method: "POST",
+        mode: "no-cors", // webhook.site & most endpoints don't return CORS headers
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
