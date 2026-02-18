@@ -130,7 +130,38 @@
       $("result-prize-text").textContent = PRIZES[winnerIndex].label;
       showScreen("result");
       launchConfetti();
+      fireWebhook(winnerIndex);
     }, CONFIG.spinDurationMs + 300);
+  }
+
+  // ── Webhook ──
+  async function fireWebhook(winnerIndex) {
+    const { url, payload } = CONFIG.webhook;
+    if (!url) return; // disabled
+
+    const tokens = {
+      "{{contactId}}":  contactId,
+      "{{prize}}":      PRIZES[winnerIndex].label,
+      "{{prizeIndex}}": winnerIndex,
+      "{{timestamp}}":  new Date().toISOString(),
+    };
+
+    // Resolve tokens in payload values; pass non-string values through as-is
+    const body = {};
+    for (const [key, val] of Object.entries(payload)) {
+      if (val === null) continue;
+      body[key] = typeof val === "string" && tokens[val] !== undefined ? tokens[val] : val;
+    }
+
+    try {
+      await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      console.warn("[webhook] failed to deliver:", err);
+    }
   }
 
   // ── Confetti ──
