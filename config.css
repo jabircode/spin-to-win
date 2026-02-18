@@ -1,0 +1,37 @@
+/**
+ * Brand / Theme Configuration
+ * ---------------------------
+ * Edit this file to rebrand the spin-to-win wheel.
+ * All colors, fonts, and visual tokens live here.
+ */
+
+:root {
+  /* ── Primary palette ── */
+  --sf-primary: #0b2480;
+  --sf-primary-dark: #3350C4;
+  --sf-primary-deeper: #2A42A8;
+  --sf-primary-light: #6B8AFF;
+  --sf-primary-lightest: #c9cdda;
+
+  /* ── Backgrounds ── */
+  --sf-bg: #F5F6FA;
+  --sf-bg-card: #9598a2;
+
+  /* ── Text ── */
+  --sf-text: #1A1A2E;
+  --sf-text-muted: #6B7280;
+
+  /* ── Gradients ── */
+  --sf-gradient: linear-gradient(135deg, #4364E0 0%, #5B7BFF 100%);
+  --sf-gradient-btn: linear-gradient(135deg, #4364E0 0%, #3350C4 100%);
+
+  /* ── Misc ── */
+  --sf-radius: 16px;
+  --sf-shadow: 0 4px 24px rgba(67, 100, 224, 0.25);
+  --sf-pointer-color: #1A1A2E;
+  --sf-wheel-border-color: var(--sf-primary);
+  --sf-wheel-outer-ring: var(--sf-primary-lightest);
+
+  /* ── Font ── */
+  --sf-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}

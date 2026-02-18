@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Spin to Win | SleekFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="config.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Loading / Verification Screen -->
+  <div id="screen-loading" class="screen active">
+    <div class="loader-container">
+      <div class="spinner"></div>
+      <p class="loader-text">Verifying your entry...</p>
+    </div>
+  </div>
+
+  <!-- Error Screen -->
+  <div id="screen-error" class="screen">
+    <div class="error-container">
+      <div class="error-icon">⚠️</div>
+      <h2>Oops!</h2>
+      <p id="error-message">Something went wrong.</p>
+    </div>
+  </div>
+
+  <!-- Main Wheel Screen -->
+  <div id="screen-wheel" class="screen">
+    <div class="app-container">
+      <div class="header">
+        <div id="logo-container"></div>
+        <h1 id="app-title"></h1>
+        <p class="subtitle" id="app-subtitle"></p>
+      </div>
+
+      <div class="wheel-wrapper">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheel-canvas" width="340" height="340"></canvas>
+      </div>
+
+      <button id="spin-btn" class="spin-button">
+        <span class="spin-text">SPIN NOW</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Result Screen -->
+  <div id="screen-result" class="screen">
+    <div class="result-container">
+      <canvas id="confetti-canvas"></canvas>
+      <div class="result-content">
+        <h2 id="result-heading"></h2>
+        <p class="result-prize" id="result-prize-text"></p>
+        <p class="result-note" id="result-note"></p>
+        <button id="close-btn" class="close-button">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Already Played Screen -->
+  <div id="screen-played" class="screen">
+    <div class="error-container">
+      <div class="error-icon">🎰</div>
+      <h2>Already Played</h2>
+      <p id="already-played-message"></p>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="prizes.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
