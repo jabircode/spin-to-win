@@ -1,4 +1,5 @@
 README.md
 .dockerignore
 Dockerfile
-nginx.conf
+.gitignore
+config.example.js
