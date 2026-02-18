@@ -1,0 +1,9 @@
+# Secret config — keep local only, never commit
+config.js
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
