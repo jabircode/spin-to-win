@@ -1,0 +1,11 @@
+# Files to exclude from Cloud Build context.
+# config.js is intentionally NOT listed here so it gets included in the build.
+
+.git
+.gitignore
+README.md
+.dockerignore
+config.example.js
+.DS_Store
+.vscode/
+.idea/
