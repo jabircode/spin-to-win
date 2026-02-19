@@ -15,6 +15,7 @@ const CONFIG = {
   // ── Wheel behavior ──
   spinDurationMs: 4000,
   extraRotations: 5, // full extra spins for dramatic effect
+  allowMultipleSpins: false, // if true, users can spin multiple times (no localStorage check)
 
   // ── Branding ──
   title: "Spin to <span class='highlight'>Win!</span>",

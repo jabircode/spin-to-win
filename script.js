@@ -121,8 +121,8 @@
     setTimeout(() => {
       isSpinning = false;
 
-      // Mark as played
-      if (contactId) {
+      // Mark as played (only if multiple spins not allowed)
+      if (!CONFIG.allowMultipleSpins && contactId) {
         localStorage.setItem(`spinwheel_${contactId}`, "played");
       }
 
@@ -270,8 +270,8 @@
       return;
     }
 
-    // Check if already played (skip for test)
-    if (contactId !== "test" && localStorage.getItem(`spinwheel_${contactId}`) === "played") {
+    // Check if already played (skip for test or if multiple spins allowed)
+    if (!CONFIG.allowMultipleSpins && contactId !== "test" && localStorage.getItem(`spinwheel_${contactId}`) === "played") {
       showScreen("played");
       return;
     }
