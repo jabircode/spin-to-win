@@ -16,6 +16,7 @@ const CONFIG = {
   spinDurationMs: 4000,
   extraRotations: 5, // full extra spins for dramatic effect
   allowMultipleSpins: false, // if true, users can spin multiple times (no localStorage check)
+  // Can use custom object ID too to check for multiple spins
 
   // ── Branding ──
   title: "Spin to <span class='highlight'>Win!</span>",
