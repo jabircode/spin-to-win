@@ -27,6 +27,7 @@ const CONFIG = {
   // ── Wheel behavior ──
   spinDurationMs: 4000,
   extraRotations: 5, // full extra spins for dramatic effect
+  testingMode: false, // if true, bypasses all checks (contact verification, chance limits) for testing
   allowMultipleSpins: false, // if true, users can spin multiple times (checks remaining chances via API)
   numberOfChances: 3, // Only applies when allowMultipleSpins is true - max number of spins per user
 

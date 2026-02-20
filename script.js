@@ -219,7 +219,8 @@
 
   // ── Record Spin to Custom Objects ──
   async function recordSpinToCustomObjects(winnerIndex) {
-    if (!CONFIG.allowMultipleSpins) return;
+    // Skip recording in testing mode or if multiple spins are disabled
+    if (!CONFIG.allowMultipleSpins || CONFIG.testingMode) return;
 
     try {
       const baseUrl = await findWorkingBaseUrl();
@@ -338,8 +339,8 @@
 
   // ── Contact verification ──
   async function verifyContact(id) {
-    // Test mode
-    if (id === "test" || CONFIG.allowMultipleSpins) {
+    // Testing mode or test contact ID - skip verification
+    if (CONFIG.testingMode || id === "test") {
       return { valid: true, name: "Test User" };
     }
 
@@ -401,8 +402,8 @@
       return;
     }
 
-    // Check remaining chances if multiple spins are allowed
-    if (CONFIG.allowMultipleSpins && contactId !== "test") {
+    // Check remaining chances if multiple spins are allowed (skip in testing mode)
+    if (CONFIG.allowMultipleSpins && !CONFIG.testingMode && contactId !== "test") {
       const chanceStatus = await checkRemainingChances(contactId);
 
       if (!chanceStatus.hasChances) {
