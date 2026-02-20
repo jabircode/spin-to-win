@@ -339,7 +339,7 @@
   // ── Contact verification ──
   async function verifyContact(id) {
     // Test mode
-    if (id === "test") {
+    if (id === "test" || CONFIG.allowMultipleSpins) {
       return { valid: true, name: "Test User" };
     }
 
