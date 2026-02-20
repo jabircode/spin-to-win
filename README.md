@@ -142,36 +142,56 @@ Then open: `http://localhost:8080/?contactId=test`
 
 ---
 
-## Deployment
+## Deployment to Google Cloud Run
 
-### Automated Deployment to Cloud Run
+Deploy your configured app (with your actual `config.js`) directly to Cloud Run using the gcloud CLI.
 
-The repository includes a GitHub Actions workflow that automatically deploys to Google Cloud Run on every push to `main` or `master`.
+### Prerequisites
 
-**Setup:**
-
-1. **Create GitHub Secrets** (in your repository settings):
-   - `GCP_PROJECT_ID`: Your Google Cloud project ID
-   - `GCP_SA_KEY`: Service account JSON key with Cloud Run and Container Registry permissions
-
-2. **Push to main/master branch:**
+1. Install [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+2. Authenticate with your Google account:
    ```bash
-   git add .
-   git commit -m "Deploy to Cloud Run"
-   git push origin main
+   gcloud auth login
+   ```
+3. Set your project ID:
+   ```bash
+   gcloud config set project YOUR_PROJECT_ID
    ```
 
-3. **Monitor deployment:**
-   - Go to GitHub Actions tab to see deployment progress
-   - Once complete, your app will be live at: `https://sleekflow-spin-to-win-327054350441.asia-southeast1.run.app`
+### Deploy Steps
 
-**Manual deployment via gcloud CLI:**
+1. **Ensure `config.js` exists** with your actual API keys and configuration:
+   ```bash
+   cd spin-the-wheel
+   ls config.js  # Should exist and contain your real config
+   ```
+
+2. **Build and submit Docker image** to Google Container Registry:
+   ```bash
+   gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/sleekflow-spin-to-win
+   ```
+
+3. **Deploy to Cloud Run**:
+   ```bash
+   gcloud run deploy sleekflow-spin-to-win \
+     --image gcr.io/YOUR_PROJECT_ID/sleekflow-spin-to-win \
+     --region asia-southeast1 \
+     --platform managed \
+     --allow-unauthenticated \
+     --port 8080
+   ```
+
+4. **Get your service URL**:
+   ```bash
+   gcloud run services describe sleekflow-spin-to-win --region asia-southeast1 --format 'value(status.url)'
+   ```
+
+### One-Command Deploy
+
+After initial setup, you can deploy with a single command:
 
 ```bash
-# Build and push Docker image
-gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/sleekflow-spin-to-win
-
-# Deploy to Cloud Run
+gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/sleekflow-spin-to-win && \
 gcloud run deploy sleekflow-spin-to-win \
   --image gcr.io/YOUR_PROJECT_ID/sleekflow-spin-to-win \
   --region asia-southeast1 \
@@ -179,6 +199,13 @@ gcloud run deploy sleekflow-spin-to-win \
   --allow-unauthenticated \
   --port 8080
 ```
+
+### Important Notes
+
+- `config.js` is **NOT** in `.gcloudignore`, so it WILL be included in the build
+- Your secrets stay local and are baked into the Docker image
+- `.gitignore` still excludes `config.js` from version control (as it should)
+- Deployment takes 2-5 minutes on average
 
 ---
 
