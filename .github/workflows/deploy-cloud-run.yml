@@ -42,7 +42,7 @@ jobs:
         run: |
           docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} \
                        -t ${{ env.IMAGE_NAME }}:latest \
-                       ./spin-the-wheel
+                       .
 
       - name: Push Docker image to GCR
         run: |
