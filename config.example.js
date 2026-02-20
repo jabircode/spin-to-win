@@ -19,7 +19,8 @@ const CONFIG = {
   ],
   endpoints: {
     contact: "/api/contact/",
-    customObjects: "/api/customObjects/spin_to_win/records/",
+    customObjectsKey: "spin_to_win", // The API expects a custom object key to be defined for namespacing your records. Change "spin_to_win" to something unique to you if needed.
+    customObjects: `/api/customObjects/${customObjectsKey}/records/`,
   },
   apiKey: "YOUR_SLEEKFLOW_API_KEY",
 

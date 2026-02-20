@@ -15,7 +15,7 @@ config.example.js
 <!-- cd spin-the-wheel
 gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/sleekflow-spin-to-win
 gcloud run deploy sleekflow-spin-to-win \
-  --image gcr.io/YOUR_PROJECT_ID/sleekflow-spin-to-win \
+  --image gcr.io/cloud-run-446403/sleekflow-spin-to-win \
   --region asia-southeast1 \
   --platform managed \
   --allow-unauthenticated \
