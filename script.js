@@ -388,10 +388,10 @@
     }
 
     // Check if already played (skip for test or if multiple spins allowed)
-    if (!CONFIG.allowMultipleSpins && contactId !== "test" && localStorage.getItem(`spinwheel_${contactId}`) === "played") {
-      showScreen("played");
-      return;
-    }
+    // if (!CONFIG.allowMultipleSpins && contactId !== "test" && localStorage.getItem(`spinwheel_${contactId}`) === "played") {
+    //   showScreen("played");
+    //   return;
+    // }
 
     // Verify contact
     const result = await verifyContact(contactId);
