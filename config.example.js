@@ -9,14 +9,25 @@
 
 const CONFIG = {
   // ── API ──
-  apiBase: "https://api.sleekflow.io/api/contact/",
+  // Multiple base URLs for failover - the app will try them in order and stick with the working one
+  baseUrls: [
+    "https://api.sleekflow.io",
+    "https://sleekflow-core-app-eus-production.azurewebsites.net",
+    "https://sleekflow-core-app-seas-production.azurewebsites.net",
+    "https://sleekflow-core-app-weu-production.azurewebsites.net",
+    "https://sleekflow-core-app-uaen-production.azurewebsites.net",
+  ],
+  endpoints: {
+    contact: "/api/contact/",
+    customObjects: "/api/customObjects/spin_to_win/records/",
+  },
   apiKey: "YOUR_SLEEKFLOW_API_KEY",
 
   // ── Wheel behavior ──
   spinDurationMs: 4000,
   extraRotations: 5, // full extra spins for dramatic effect
-  allowMultipleSpins: false, // if true, users can spin multiple times (no localStorage check)
-  // Can use custom object ID too to check for multiple spins
+  allowMultipleSpins: false, // if true, users can spin multiple times (checks remaining chances via API)
+  numberOfChances: 3, // Only applies when allowMultipleSpins is true - max number of spins per user
 
   // ── Branding ──
   title: "Spin to <span class='highlight'>Win!</span>",
@@ -35,14 +46,15 @@ const CONFIG = {
     url: null, // e.g. "https://hooks.zapier.com/hooks/catch/xxxxx/yyyyy/"
 
     // Customize the payload shape here. Values are resolved at spin time.
-    // Available tokens: contactId, prize (label string), prizeIndex, timestamp (UTC ISO string)
+    // Available tokens: contactId, prize (label string), prizeIndex, timestamp (UTC ISO string), chanceNumber
     // Set any field to null to omit it from the payload.
     payload: {
-      contactId:  "{{contactId}}",
-      prize:      "{{prize}}",
-      prizeIndex: "{{prizeIndex}}",
-      timestamp:  "{{timestamp}}",   // UTC+0 ISO 8601, e.g. "2025-01-31T08:45:00.000Z"
-      source:     "spin-to-win",     // static value — change or remove as needed
+      contactId:    "{{contactId}}",
+      prize:        "{{prize}}",
+      prizeIndex:   "{{prizeIndex}}",
+      timestamp:    "{{timestamp}}",    // UTC+0 ISO 8601, e.g. "2025-01-31T08:45:00.000Z"
+      chanceNumber: "{{chanceNumber}}", // Only relevant when allowMultipleSpins is true
+      source:       "spin-to-win",      // static value — change or remove as needed
     },
   },
 

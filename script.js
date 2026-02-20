@@ -27,11 +27,91 @@
   let contactId = null;
   let currentRotation = 0;
   let isSpinning = false;
+  let workingBaseUrl = null; // Cached working base URL for this session
+  let currentChanceNumber = 1; // Track which chance the user is on
 
   // ── Screen management ──
   function showScreen(name) {
     Object.values(screens).forEach((s) => s.classList.remove("active"));
     screens[name].classList.add("active");
+  }
+
+  // ── API Base URL Failover ──
+  // Try each base URL until one works, then cache it for the session
+  async function findWorkingBaseUrl() {
+    if (workingBaseUrl) return workingBaseUrl;
+
+    for (const baseUrl of CONFIG.baseUrls) {
+      try {
+        // Test with a simple HEAD or GET request
+        const testUrl = `${baseUrl}${CONFIG.endpoints.contact}test`;
+        const response = await fetch(testUrl, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "X-Sleekflow-Api-Key": CONFIG.apiKey,
+          },
+          signal: AbortSignal.timeout(5000), // 5 second timeout per URL
+        });
+
+        // If we get any response (even 404), the base URL is reachable
+        workingBaseUrl = baseUrl;
+        console.log(`[API] Using base URL: ${baseUrl}`);
+        return baseUrl;
+      } catch (err) {
+        console.warn(`[API] Failed to reach ${baseUrl}:`, err.message);
+        continue;
+      }
+    }
+
+    throw new Error("All API base URLs are unreachable");
+  }
+
+  // ── Check Remaining Chances ──
+  async function checkRemainingChances(contactId) {
+    if (!CONFIG.allowMultipleSpins) {
+      return { hasChances: true, used: 0, total: 0 };
+    }
+
+    const baseUrl = await findWorkingBaseUrl();
+    const maxChances = CONFIG.numberOfChances || 3;
+
+    // Check from the max chance number down to 1 to find the highest used chance
+    for (let chanceNum = maxChances; chanceNum >= 1; chanceNum--) {
+      const recordId = `spinToWin-${contactId}-${chanceNum}`;
+
+      try {
+        const response = await fetch(`${baseUrl}${CONFIG.endpoints.customObjects}${encodeURIComponent(recordId)}`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "X-Sleekflow-Api-Key": CONFIG.apiKey,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // If we got a valid response with data, this chance has been used
+          if (data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0)) {
+            // User has used up to this chance number
+            if (chanceNum >= maxChances) {
+              return { hasChances: false, used: maxChances, total: maxChances };
+            } else {
+              // User still has chances remaining
+              currentChanceNumber = chanceNum + 1;
+              return { hasChances: true, used: chanceNum, total: maxChances };
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`[Chance Check] Error checking chance ${chanceNum}:`, err);
+      }
+    }
+
+    // No records found - user hasn't used any chances
+    currentChanceNumber = 1;
+    return { hasChances: true, used: 0, total: maxChances };
   }
 
   // ── Prize selection (weighted random) ──
@@ -130,8 +210,42 @@
       $("result-prize-text").textContent = PRIZES[winnerIndex].label;
       showScreen("result");
       launchConfetti();
+
+      // Record the spin and fire webhook
+      recordSpinToCustomObjects(winnerIndex);
       fireWebhook(winnerIndex);
     }, CONFIG.spinDurationMs + 300);
+  }
+
+  // ── Record Spin to Custom Objects ──
+  async function recordSpinToCustomObjects(winnerIndex) {
+    if (!CONFIG.allowMultipleSpins) return;
+
+    try {
+      const baseUrl = await findWorkingBaseUrl();
+      const recordId = `spinToWin-${contactId}-${currentChanceNumber}`;
+
+      await fetch(`${baseUrl}${CONFIG.endpoints.customObjects}${encodeURIComponent(recordId)}`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-Sleekflow-Api-Key": CONFIG.apiKey,
+        },
+        body: JSON.stringify({
+          id: recordId,
+          contactId: contactId,
+          chanceNumber: currentChanceNumber,
+          prize: PRIZES[winnerIndex].label,
+          prizeIndex: winnerIndex,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      console.log(`[Custom Objects] Recorded spin ${currentChanceNumber} for contact ${contactId}`);
+    } catch (err) {
+      console.warn("[Custom Objects] Failed to record spin:", err);
+    }
   }
 
   // ── Webhook ──
@@ -140,10 +254,11 @@
     if (!url) return; // disabled
 
     const tokens = {
-      "{{contactId}}":  contactId,
-      "{{prize}}":      PRIZES[winnerIndex].label,
-      "{{prizeIndex}}": winnerIndex,
-      "{{timestamp}}":  new Date().toISOString(),
+      "{{contactId}}":     contactId,
+      "{{prize}}":         PRIZES[winnerIndex].label,
+      "{{prizeIndex}}":    winnerIndex,
+      "{{timestamp}}":     new Date().toISOString(),
+      "{{chanceNumber}}":  currentChanceNumber,
     };
 
     // Resolve tokens in payload values; pass non-string values through as-is
@@ -229,7 +344,8 @@
     }
 
     try {
-      const response = await fetch(`${CONFIG.apiBase}${encodeURIComponent(id)}`, {
+      const baseUrl = await findWorkingBaseUrl();
+      const response = await fetch(`${baseUrl}${CONFIG.endpoints.contact}${encodeURIComponent(id)}`, {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -283,6 +399,24 @@
       $("error-message").textContent = result.error;
       showScreen("error");
       return;
+    }
+
+    // Check remaining chances if multiple spins are allowed
+    if (CONFIG.allowMultipleSpins && contactId !== "test") {
+      const chanceStatus = await checkRemainingChances(contactId);
+
+      if (!chanceStatus.hasChances) {
+        // Update the message to show they've used all chances
+        $("already-played-message").textContent = `You've used all ${chanceStatus.total} of your spins! Stay tuned for your prizes.`;
+        showScreen("played");
+        return;
+      }
+
+      // Update button text to show remaining chances
+      const remainingChances = chanceStatus.total - chanceStatus.used;
+      if (remainingChances > 1) {
+        spinBtn.querySelector(".spin-text").textContent = `SPIN (${remainingChances} chances left)`;
+      }
     }
 
     // Setup wheel
